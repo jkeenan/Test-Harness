@@ -538,13 +538,15 @@ for my $test_args ( get_arg_sets() ) {
         # some people -Dcc="somecc -fsanitize=..." or -Doptimize="-fsanitize=..."
         skip "ASAN doesn't passthrough SEGV", 1
           if "$Config{cc} $Config{ccflags} $Config{optimize}" =~ /-fsanitize\b/;
-
+print STDERR "XXX:\n";
         @output = ();
+        # Following line creates './perl.core' on FreeBSD
         _runtests( $harness_failures, "$sample_tests/segfault" );
 
         my $out_str = join q<>, @output;
 
         like( $out_str, qr<SEGV>, 'SIGSEGV is parsed out' );
+print STDERR "YYY:\n";
     }
 
     #XXXX
