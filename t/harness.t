@@ -539,31 +539,34 @@ for my $test_args ( get_arg_sets() ) {
         # some people -Dcc="somecc -fsanitize=..." or -Doptimize="-fsanitize=..."
         skip "ASAN doesn't passthrough SEGV", 1
           if "$Config{cc} $Config{ccflags} $Config{optimize}" =~ /-fsanitize\b/;
+
 print STDERR "XXX:\n";
 warn "XXX1: perl.core file exists" if (-e './perl.core');
+
         @output = ();
-        # Following line creates './perl.core' on FreeBSD
+
+        # The following line creates './perl.core' on FreeBSD:
+        #
         # _runtests( $harness_failures, "$sample_tests/segfault" );
-        #print STDERR "FFF: harness_failures", scalar (@$harness_failures), "\n";
-        print STDERR "FFF1: ", ref $harness_failures, "\n";
-        print STDERR "FFF2: ", scalar keys (%$harness_failures), " elements in harness_failures\n";
-        #print STDERR Dumper ($harness_failures);
-#        for my $el ( keys (%$harness_failures) ) {
-#            print STDERR Dumper ($harness_failures);
-#        }
-        my (@inputs) = ( $harness_failures, "$sample_tests/segfault" );
+        #
+        # Our objective is to isolate the code generating the segfault so that
+        # we can understand why it (seemingly) creates a core dump on FreeBSD
+        # et al. but not on Linux.
 
-        # Below will print:
-        # AAA: TAP::Harness=HASH(0x8303d53d8)
-        # AAA: t/sample-tests/segfault
-        print STDERR "AAA: $_\n" for @inputs;
-        print STDERR "BBB: ", scalar(@output), " elements in output\n";
+print STDERR "FFF1: \$harness_failures is a ", ref $harness_failures, "\n";
+print STDERR "FFF2: ", scalar keys (%$harness_failures), " elements in \$harness_failures\n";
 
-        #_runtests( @inputs );
-        my $aggregate = _runtests( @inputs );
+        # First, run only the TAP::Harness objects seen so far:
+        _runtests( $harness_failures );
 warn "XXX2: perl.core file exists" if (-e './perl.core');
 
-print STDERR "CCC: $aggregate\n";
+        # Next, run the segfault test:
+        # First argument to _runtests must be a TAP::Harness object (I think)
+
+        my $this_harness = $HARNESS->new;
+        _runtests( $this_harness, "$sample_tests/segfault" );
+warn "XXX3: perl.core file exists" if (-e './perl.core');
+
 print STDERR Dumper(\@output);
 
         my $out_str = join q<>, @output;
