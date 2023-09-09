@@ -6,6 +6,7 @@ BEGIN {
 
 use strict;
 use warnings;
+use Data::Dumper;
 
 use Test::More;
 use IO::c55Capture;
@@ -539,9 +540,31 @@ for my $test_args ( get_arg_sets() ) {
         skip "ASAN doesn't passthrough SEGV", 1
           if "$Config{cc} $Config{ccflags} $Config{optimize}" =~ /-fsanitize\b/;
 print STDERR "XXX:\n";
+warn "XXX1: perl.core file exists" if (-e './perl.core');
         @output = ();
         # Following line creates './perl.core' on FreeBSD
-        _runtests( $harness_failures, "$sample_tests/segfault" );
+        # _runtests( $harness_failures, "$sample_tests/segfault" );
+        #print STDERR "FFF: harness_failures", scalar (@$harness_failures), "\n";
+        print STDERR "FFF1: ", ref $harness_failures, "\n";
+        print STDERR "FFF2: ", scalar keys (%$harness_failures), " elements in harness_failures\n";
+        #print STDERR Dumper ($harness_failures);
+#        for my $el ( keys (%$harness_failures) ) {
+#            print STDERR Dumper ($harness_failures);
+#        }
+        my (@inputs) = ( $harness_failures, "$sample_tests/segfault" );
+
+        # Below will print:
+        # AAA: TAP::Harness=HASH(0x8303d53d8)
+        # AAA: t/sample-tests/segfault
+        print STDERR "AAA: $_\n" for @inputs;
+        print STDERR "BBB: ", scalar(@output), " elements in output\n";
+
+        #_runtests( @inputs );
+        my $aggregate = _runtests( @inputs );
+warn "XXX2: perl.core file exists" if (-e './perl.core');
+
+print STDERR "CCC: $aggregate\n";
+print STDERR Dumper(\@output);
 
         my $out_str = join q<>, @output;
 
